@@ -76,6 +76,11 @@ flowchart LR
 如果只想先跑一个仓库，可以直接看[快速开始](#快速开始)；如果需要配置 WSL 和
 网络隔离，请看 [WSL 部署说明](docs/wsl_deployment.md)。
 
+需要从同一对话前缀比较不同 payload 时，可使用独立的
+[Claude Code 检查点原型](docs/claude_checkpoint_zh.md)：在工具执行前保存对话与文件快照，
+检测工具返回中的登记片段，再通过官方 SDK 创建会话分支。本地 API 测试服务可验证
+hooks 与恢复边界，无需真实模型调用；该原型尚未接入 campaign 评分。
+
 ## 📰 最新进展
 
 - **2026-11-12**：增加 WSL/Linux 原生 OpenCode 2.x 配置、rootless network
