@@ -142,6 +142,29 @@ def extract_final_answer(stdout_text: str, *, strategy: str = "jsonl_events") ->
         return None
     if strategy == "tail":
         return text.strip()
+    if strategy == "claude_jsonl":
+        answer = None
+        for line in text.splitlines():
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            if event.get("schema") == "claude-code-capture-v1":
+                if event.get("kind") != "stream":
+                    continue
+                event = event.get("payload", {})
+            if not isinstance(event, dict):
+                continue
+            if (
+                event.get("type") == "result"
+                and event.get("subtype") == "success"
+                and not event.get("is_error")
+                and isinstance(event.get("result"), str)
+            ):
+                answer = event["result"]
+        return answer
     if strategy == "jsonl_events":
         parts: list[str] = []
         for line in text.splitlines():

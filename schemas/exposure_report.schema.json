@@ -12,6 +12,11 @@
           "title": "Content Returned",
           "type": "boolean"
         },
+        "content_stage": {
+          "default": "unknown",
+          "title": "Content Stage",
+          "type": "string"
+        },
         "event_ids": {
           "items": {
             "type": "string"
@@ -39,6 +44,11 @@
           ],
           "default": null,
           "title": "First Sequence"
+        },
+        "model_received_payload": {
+          "default": "unknown",
+          "title": "Model Received Payload",
+          "type": "string"
         },
         "payload_path": {
           "title": "Payload Path",

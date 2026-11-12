@@ -330,11 +330,13 @@ class AgentConfig(_Strict):
     mode: Literal["argv", "stdout"] = "stdout"
     argv: list[str] = Field(default_factory=list)
     #: How the answer is located inside stdout when ``mode = stdout``.
-    answer_extractor: Literal["jsonl_events", "json_last_object", "tail"] = "jsonl_events"
+    answer_extractor: Literal["jsonl_events", "json_last_object", "tail", "claude_jsonl"] = (
+        "jsonl_events"
+    )
     #: Adapter for the framework's native stdout event stream.  This is separate
     #: from answer extraction: an answer may be parseable even when its trace is
     #: partial, and vice versa.
-    trace_adapter: Literal["none", "opencode_jsonl"] = "none"
+    trace_adapter: Literal["none", "opencode_jsonl", "claude_code_jsonl"] = "none"
     #: Read-only command used before the campaign to freeze the exact framework
     #: version into every run. It must not contact a model endpoint.
     framework_version_command: list[str] = Field(default_factory=list)

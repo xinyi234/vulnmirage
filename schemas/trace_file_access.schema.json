@@ -6,6 +6,18 @@
       "title": "Access Type",
       "type": "string"
     },
+    "agent_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent Id"
+    },
     "content_returned_to_model": {
       "default": false,
       "title": "Content Returned To Model",
@@ -28,6 +40,18 @@
       "minimum": 1,
       "title": "Sequence",
       "type": "integer"
+    },
+    "session_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Session Id"
     },
     "tool_call_id": {
       "anyOf": [

@@ -35,6 +35,7 @@ class NormalizedEvent(_Strict):
     input_summary: dict[str, Any] = Field(default_factory=dict)
     output_preview: str | None = None
     output_sha256: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ToolCallRecord(_Strict):
@@ -42,6 +43,8 @@ class ToolCallRecord(_Strict):
     event_id: str
     sequence: int = Field(ge=1)
     tool_call_id: str | None = None
+    session_id: str | None = None
+    agent_id: str | None = None
     tool_name: str
     status: str | None = None
     duration_ms: float | None = Field(default=None, ge=0)
@@ -56,6 +59,8 @@ class FileAccessRecord(_Strict):
     sequence: int = Field(ge=1)
     path: str
     tool_call_id: str | None = None
+    session_id: str | None = None
+    agent_id: str | None = None
     tool_name: str
     access_type: str
     content_returned_to_model: bool = False
@@ -67,9 +72,7 @@ class TraceManifest(_Strict):
     adapter_version: str | None = None
     framework: str | None = None
     framework_version: str | None = None
-    compatibility_status: Literal["validated_fixture", "unvalidated", "unknown"] = (
-        "unknown"
-    )
+    compatibility_status: Literal["validated_fixture", "unvalidated", "unknown"] = "unknown"
     status: Literal["ok", "partial", "missing", "empty", "unsupported", "disabled"]
     source_file: str | None = None
     source_sha256: str | None = None

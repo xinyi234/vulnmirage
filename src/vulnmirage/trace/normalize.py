@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from ..hashing import atomic_write_json, atomic_write_text, sha256_file
+from .claude_code import (
+    CLAUDE_ADAPTER_VERSION,
+    CLAUDE_VALIDATED_VERSIONS,
+    ClaudeParseResult,
+    parse_claude_code_jsonl,
+)
+from .claude_metrics import behavior_metrics
 from .completeness import assess_completeness
 from .models import (
     OPENCODE_ADAPTER_VERSION,
@@ -38,12 +46,13 @@ def normalize_trace(
     repo_root: str | Path,
     framework_version: str | None = None,
     secret_values: Iterable[str] = (),
+    payload_catalog: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     source = Path(source_path) if source_path else None
     adapter_version: str | None = None
-    result = ParseResult()
+    result = ClaudeParseResult() if adapter == "claude_code_jsonl" else ParseResult()
     limitations: list[str] = []
     framework: str | None = None
     compatibility_status = "unknown"
@@ -61,6 +70,9 @@ def normalize_trace(
                 "OpenCode framework version is not registered as validated in this runtime build: "
                 f"{framework_version}"
             )
+    elif adapter == "claude_code_jsonl":
+        framework = "claude_code"
+        adapter_version = CLAUDE_ADAPTER_VERSION
 
     if adapter == "none":
         status = "disabled"
@@ -85,6 +97,61 @@ def normalize_trace(
             status = "partial" if result.invalid_lines else "ok"
             if compatibility_status == "unvalidated":
                 status = "partial"
+    elif adapter == "claude_code_jsonl":
+        import re
+
+        framework = "claude_code"
+        adapter_version = CLAUDE_ADAPTER_VERSION
+        result = parse_claude_code_jsonl(
+            source,
+            repo_root=Path(repo_root),
+            secret_values=tuple(v for v in secret_values if v),
+            catalog=payload_catalog,
+        )
+        framework_version = framework_version or result.capture.get("framework_version")
+        if not framework_version:
+            framework_version = next(
+                (
+                    e.metadata.get("framework_version")
+                    for e in result.events
+                    if e.metadata.get("framework_version")
+                ),
+                None,
+            )
+        version = re.search(r"\b\d+\.\d+\.\d+\b", framework_version or "")
+        observations = [framework_version, result.capture.get("framework_version")]
+        observations.extend(e.metadata.get("framework_version") for e in result.events)
+        versions = {
+            m.group()
+            for value in observations
+            if value
+            for m in [re.search(r"\b\d+\.\d+\.\d+\b", value)]
+            if m
+        }
+        if len(versions) > 1:
+            result.quality_issues.append(
+                "framework version identity conflicts across native sources"
+            )
+        compatibility_status = (
+            "validated_fixture"
+            if version and version.group() in CLAUDE_VALIDATED_VERSIONS
+            else "unvalidated"
+            if framework_version
+            else "unknown"
+        )
+        status = "ok" if result.events else "unsupported"
+        unavailable = None if result.events else "unsupported"
+        if (
+            result.invalid_lines
+            or result.quality_issues
+            or compatibility_status != "validated_fixture"
+        ):
+            status = "partial" if result.events else "unsupported"
+        limitations.extend(result.limitations + result.quality_issues)
+        if compatibility_status != "validated_fixture":
+            limitations.append(
+                "Claude Code version is not registered by the local native-CLI validation fixture"
+            )
     else:
         status = "unsupported"
         unavailable = "unsupported"
@@ -100,15 +167,27 @@ def normalize_trace(
     )
     if status == "ok" and completeness.status == "partial":
         status = "partial"
+    if adapter == "claude_code_jsonl" and getattr(result, "quality_issues", []):
+        completeness = completeness.model_copy(
+            update={
+                "status": "partial",
+                "limitations": completeness.limitations + result.quality_issues,
+            }
+        )
     limitations.extend(completeness.limitations)
 
     _write_jsonl(out / TRACE_OUTPUTS[0], result.events)
     _write_jsonl(out / TRACE_OUTPUTS[1], result.tool_calls)
     _write_jsonl(out / TRACE_OUTPUTS[2], result.file_access)
     atomic_write_json(out / "trace_completeness.json", completeness)
+    extra_outputs = []
+    if adapter == "claude_code_jsonl" and hasattr(result, "exposures"):
+        _write_jsonl(out / "payload_exposure.jsonl", result.exposures)
+        atomic_write_json(out / "behavior_metrics.json", behavior_metrics(result))
+        extra_outputs = ["payload_exposure.jsonl", "behavior_metrics.json"]
     output_hashes = {
         name: sha256_file(out / name)
-        for name in (*TRACE_OUTPUTS, "trace_completeness.json")
+        for name in (*TRACE_OUTPUTS, "trace_completeness.json", *extra_outputs)
     }
     manifest = TraceManifest(
         adapter=adapter,

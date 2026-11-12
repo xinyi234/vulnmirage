@@ -1,0 +1,18 @@
+{
+  "framework_version": "2.1.322",
+  "sdk_version": "0.2.180",
+  "scope": "Real native CLI against a local scripted Messages service; not real-model behavior",
+  "sanitization": "Kept capture/hook/session and assistant/user/result stream records; replaced local repository/control paths",
+  "fixtures": {
+    "2.1.322-success.jsonl": {
+      "sha256": "6b971f421cfffc4a66402da9d0399079d0399719e864ca32bc4018d7eaa94486",
+      "source_raw_sha256": "faaf6fb445f0b3ec07e9d8b490baf3d4b4ae381a8564cdb585decf331b912ecd",
+      "records": 26
+    },
+    "2.1.322-failure.jsonl": {
+      "sha256": "b504e54fa26c725b08e9be026d779eb8cfd6bb1af60ab2ae1a951ec0f7256e58",
+      "source_raw_sha256": "85b83ebbba71980078999e8f4aa7885adc98b01db0b38b839141c00b8090aae3",
+      "records": 26
+    }
+  }
+}

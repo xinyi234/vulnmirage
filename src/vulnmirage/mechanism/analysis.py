@@ -79,6 +79,8 @@ class ExposureRow(BaseModel):
     event_ids: list[str] = Field(default_factory=list)
     first_sequence: int | None = None
     evidence_kind: str = "unverified"
+    content_stage: str = "unknown"
+    model_received_payload: str = "unknown"
 
 
 class ExposureReport(BaseModel):
@@ -216,6 +218,13 @@ def _shingles(text: str, size: int = 8) -> set[str]:
 
 
 # ---------------------------------------------------------------------- exposure
+def _trace_artifact(observation: RunObservation, name: str) -> Path | None:
+    explicit = observation.artifacts.get(name)
+    if explicit is not None:
+        return explicit
+    return observation.run_dir / name if observation.run_dir else None
+
+
 def analyze_exposure(
     observations: Iterable[RunObservation],
     *,
@@ -230,6 +239,44 @@ def analyze_exposure(
         access = _read_jsonl(observation.artifacts.get("file_access.jsonl"))
         events = _read_jsonl(observation.artifacts.get("events.normalized.jsonl"))
         variant_texts = texts.get(observation.variant_id, {})
+        manifest = _read_json(_trace_artifact(observation, "trace_manifest.json")) or {}
+        claude = manifest.get("framework") == "claude_code" or any(
+            e.get("metadata", {}).get("origin") in {"hook", "session", "stream"} for e in events
+        )
+        if claude:
+            matches = _read_jsonl(_trace_artifact(observation, "payload_exposure.jsonl"))
+            for payload_path in observation.payload_paths:
+                hits = [
+                    e
+                    for e in matches
+                    if not e.get("historical")
+                    and _path_matches(_normalize_path(e.get("payload_path")), payload_path)
+                ]
+                priority = {"model_bound": 3, "tool_output": 2, "user_prompt": 1}
+                best = max(hits, key=lambda e: priority.get(e.get("stage"), 0), default={})
+                stage = best.get("stage", "unknown")
+                rows.append(
+                    ExposureRow(
+                        run_id=observation.run_id,
+                        variant_id=observation.variant_id,
+                        payload_path=payload_path,
+                        exposure_state="unknown",
+                        content_stage=stage,
+                        content_returned=False,
+                        basis=(
+                            f"Claude fragment stage={stage}; provider receipt unknown"
+                            if hits
+                            else "Claude payload match unavailable; file access alone is insufficient"
+                        ),
+                        evidence_kind=f"claude_{stage}_fragment" if hits else "unverified",
+                        event_ids=[e["event_id"] for e in hits][:20],
+                        first_sequence=best.get("sequence"),
+                    )
+                )
+            notes.append(
+                f"{observation.run_id}: Claude model-bound content does not prove provider receipt"
+            )
+            continue
         if not access:
             for payload_path in observation.payload_paths:
                 rows.append(
@@ -345,6 +392,14 @@ def _row_for(observation: RunObservation) -> TrajectoryRow:
         if str(item.get("event_type", "")).endswith("tool_call")
         or str(item.get("event_type", "")) == "tool_result"
     )
+    calls = _read_jsonl(_trace_artifact(observation, "tool_calls.jsonl"))
+    if calls:
+        tool_calls = len(
+            {
+                (c.get("session_id"), c.get("agent_id"), c.get("tool_call_id") or c.get("event_id"))
+                for c in calls
+            }
+        )
     targets = [
         path
         for path in files

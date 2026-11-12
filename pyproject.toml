@@ -16,8 +16,17 @@ dependencies = [
   "PyYAML>=6.0",
 ]
 
+[project.optional-dependencies]
+claude = [
+  "claude-agent-sdk>=0.2.180,<0.3",
+]
+dev = [
+  "pytest>=8",
+]
+
 [project.scripts]
 vulnmirage = "vulnmirage.cli:main"
+vulnmirage-claude-trace = "vulnmirage.claude_trace.__main__:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -27,3 +36,12 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 vulnmirage = ["py.typed"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers"
+markers = [
+  "integration: real Claude Code CLI against a local API stub (no paid model calls)",
+]

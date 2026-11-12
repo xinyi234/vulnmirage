@@ -77,6 +77,16 @@ flowchart LR
 If you only want to run one repository, jump to [Quick start](#quick-start). For WSL
 setup and network-isolation checks, use the [WSL deployment guide](docs/wsl_deployment.md).
 
+For controlled experiments from a shared conversation prefix, see the independent
+[Claude Code checkpoint prototype](docs/claude_checkpoint_zh.md). It captures pre-tool
+conversation/file snapshots, detects registered payload fragments in tool returns,
+and creates official SDK session forks. A local API stub verifies the hook and resume
+boundaries without paid model calls; campaign scoring is not yet connected.
+
+The [Claude Code trace chain](docs/claude_trace_zh.md) adds native hook/stream/session
+capture, compatible normalized artifacts, payload-return evidence, and descriptive
+behavior comparisons from these checkpoints.
+
 ## 📰 News
 
 - **2026-11-04** — Added research-question-specific variant sets, plan-time set freezing,

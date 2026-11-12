@@ -31,9 +31,11 @@ def assess_completeness(
             limitations=["trace normalization was disabled for this agent configuration"],
         )
 
-    call_ids = {call.tool_call_id or call.event_id for call in tool_calls}
+    call_ids = {
+        (call.session_id, call.agent_id, call.tool_call_id or call.event_id) for call in tool_calls
+    }
     terminal_call_ids = {
-        call.tool_call_id or call.event_id
+        (call.session_id, call.agent_id, call.tool_call_id or call.event_id)
         for call in tool_calls
         if (call.status or "").lower() in {"completed", "error"}
     }

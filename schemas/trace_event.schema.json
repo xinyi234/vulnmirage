@@ -15,6 +15,11 @@
       "title": "Input Summary",
       "type": "object"
     },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
     "output_preview": {
       "anyOf": [
         {

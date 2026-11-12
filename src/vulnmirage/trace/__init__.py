@@ -1,5 +1,6 @@
 """Native agent trace adapters and framework-neutral contracts."""
 
+from .claude_code import parse_claude_code_jsonl
 from .completeness import assess_completeness
 from .models import (
     FileAccessRecord,
@@ -20,4 +21,5 @@ __all__ = [
     "assess_completeness",
     "normalize_trace",
     "parse_opencode_jsonl",
+    "parse_claude_code_jsonl",
 ]

@@ -1,0 +1,32 @@
+schema_version: "1.0"
+
+# Trace/answer interoperability example. This does not implement a Claude Code
+# inference-gateway adapter or attest OS isolation. The campaign's existing
+# isolation eligibility checks must still pass independently.
+runtime: subprocess
+mode: stdout
+answer_extractor: claude_jsonl
+trace_adapter: claude_code_jsonl
+framework_version_command: [claude, --version]
+timeout_seconds: 1200
+model_label: claude-sonnet-4-6
+requires_env: [ANTHROPIC_API_KEY]
+env_allowlist: [PATH, HOME, LANG, LC_ALL, ANTHROPIC_BASE_URL, CLAUDE_CONFIG_DIR]
+
+argv:
+  - vulnmirage-claude-trace
+  - run
+  - --repo
+  - "{repo}"
+  - --out
+  - "{output}/claude-trace"
+  - --prompt-file
+  - "{task}"
+  - --model
+  - claude-sonnet-4-6
+  # Finish the inner capture before the campaign's default 900-second deadline.
+  - --timeout
+  - "840"
+  - --max-turns
+  - "30"
+  - --emit-jsonl
