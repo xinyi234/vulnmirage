@@ -492,10 +492,9 @@ Benchmark 运行时已经实现：
 - FPA、FlashBoom 等语义方法与行为等价验证；
 - 多模型、多任务、多重复的正式冻结实验。
 
-当前数据集/schema 快照：
+当前数据集快照：
 
 ```text
-52 schemas current; 0 missing; 0 stale
 47 tasks / 725 targets，manifest digest 已验证
 725/725 targets 可生成清理后的 T2 oracle view；0 sanitizer leaks
 ```
@@ -521,7 +520,6 @@ Benchmark 运行时已经实现：
 configs/        实验与 OpenCode/provider 配置
 PayloadGen/     方法注册表、realization、模板与 variant sets
 prompts/        版本化审计任务与答案契约
-schemas/        生成的公开产物 schema
 src/vulnmirage/
   campaign/     plan、状态机、执行器与主流程
   ingest/       dataset-core reader

@@ -492,10 +492,9 @@ Not yet complete for a full published experiment:
 - FPA and FlashBoom semantic generators and behavior-equivalence validation;
 - a multi-model, repeated real campaign over all selected tasks.
 
-Current dataset/schema snapshot:
+Current dataset snapshot:
 
 ```text
-52 schemas current; 0 missing; 0 stale
 47 tasks / 725 targets loaded with declared digests verified
 725/725 targets admit a sanitized T2 oracle view; 0 sanitizer leaks
 ```
@@ -523,7 +522,6 @@ The next milestone is **experiment readiness**, not adding more treatment names:
 configs/        Experiment and OpenCode/provider configurations
 PayloadGen/     Method registry, deterministic templates and variant sets
 prompts/        Versioned audit prompt and answer contract
-schemas/        Generated public artifact contracts
 src/vulnmirage/
   campaign/     Planning, phase state, execution and orchestration
   ingest/       Dataset-core reader
